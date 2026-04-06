@@ -13,12 +13,12 @@ public class Task {
     private String name;
     private String description;
     private Status status;
-    private Duration duration;
     private Instant startTime;
+    private Duration duration;
 
 
     //  конструктор один
-    public Task(String name, String description, Status status, Duration duration, Instant startTime) {
+    public Task(String name, String description, Status status, Instant startTime,  Duration duration) {
         this.name = name;
         this.description = description;
         this.status = status;
@@ -37,7 +37,7 @@ public class Task {
     }
 
     // конструктор с передачей id
-    public Task(Integer id, String name, String description, Status status, Duration duration, Instant startTime) {
+    public Task(Integer id, String name, String description, Status status, Instant startTime, Duration duration) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -47,12 +47,12 @@ public class Task {
     }
 
     // конструктор без передачи статуса задачи и id
-    public Task(String name, String description, Duration duration, Instant startTime) {
+    public Task(String name, String description, Instant startTime, Duration duration) {
         this.name = name;
         this.description = description;
         this.status = Status.NEW;
-        this.duration = duration;
         this.startTime = startTime;
+        this.duration = duration;
     }
 
 
