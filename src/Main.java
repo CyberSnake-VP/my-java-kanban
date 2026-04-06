@@ -4,16 +4,23 @@ import tasks.Task;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Main {
     public static void main(String[] args) {
-        TaskManager manager = new InMemoryTaskManager();
-        Task task = new Task("name", "description", Instant.now(), Duration.ofMinutes(10));
+       ArrayList<Integer> numbers = new ArrayList<>();
+       numbers.add(1);
+       numbers.add(2);
+       System.out.println(numbers);
+       numbers.set(1, 3);
+       System.out.println(numbers);
 
-
-        Task taskWithId = manager.createTask(task);
-        task = manager.getTask(taskWithId.getId());
-        System.out.println(task);
-
+       for(Integer number : numbers) {
+           if(number == 1) {
+               numbers.set(1, 23);
+           }
+           System.out.println(number);
+       }
     }
 }
