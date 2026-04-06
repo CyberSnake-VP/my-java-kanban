@@ -14,6 +14,8 @@ public class InMemoryTaskManager implements TaskManager {
     protected final HashMap<Integer, Task> tasks = new HashMap<>();
     protected final HashMap<Integer, Epic> epics = new HashMap<>();
     protected final HashMap<Integer, Subtask> subtasks = new HashMap<>();
+    // список просмотренных задач(история просмотров)
+    protected final HistoryManager history = Managers.getDefaultHistory();
 
     private Integer generateId() {
         return id++;
@@ -38,6 +40,7 @@ public class InMemoryTaskManager implements TaskManager {
         // возвращаем задачу если она существует
         if (tasks.containsKey(id)) {
             Task task = tasks.get(id);
+            history.add(new Task(task));
             return new Task(task);
         }
         return null;
@@ -54,6 +57,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void deleteTask(Integer id) {
+        history.remove(id);
         tasks.remove(id);
     }
 
