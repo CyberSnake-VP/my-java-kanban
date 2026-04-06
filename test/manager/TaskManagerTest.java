@@ -29,7 +29,7 @@ public abstract class TaskManagerTest <T extends TaskManager> {
 
         Task expectedTask = manager.createTask(task);
         Task actualTask = manager.getTask(expectedTask.getId());
-        Task actualCopyTaskMustBeNull = manager.createTask(task);
+        Task actualCopyTaskMustBeNull = manager.createTask(expectedTask);
         final String actualName = actualTask.getName();
         final String actualDescription = actualTask.getDescription();
         final Status actualStatus = actualTask.getStatus();
@@ -87,5 +87,81 @@ public abstract class TaskManagerTest <T extends TaskManager> {
         assertEquals(expectedName, actualTasks.getFirst().getName(), "Task name should be the same");
         assertEquals(expectedDescription, actualTasks.getFirst().getDescription(), "Task description should be the same");
         assertEquals(expectedStatus, actualTasks.getFirst().getStatus(), "Task status should be the same");
+    }
+
+    @Test
+    void deleteAllTasks() {
+        manager.createTask(task);
+        manager.deleteAllTasks();
+        ArrayList<Task> actualTasks = manager.getTasks();
+        assertEquals(0, actualTasks.size(), "Task should not be empty");
+    }
+
+
+    @Test
+    void createEpic() {
+        final String expectedName = "name";
+        final String expectedDescription = "description";
+        final Status expectedStatus = Status.NEW;
+
+        Epic expectedEpic = manager.createEpic(epic);
+        Epic actualEpic = manager.getEpic(expectedEpic.getId());
+        Epic actualEpicCopy = manager.createEpic(epic);
+        final String actualName = actualEpic.getName();
+        final String actualDescription = actualEpic.getDescription();
+        final Status actualStatus = actualEpic.getStatus();
+        assertNotNull(actualEpic, "Epic should not be null");
+        assertNull(actualEpicCopy, "Epic copy should be null");
+        assertEquals(expectedName, actualName, "Epic name should be the same");
+        assertEquals(expectedDescription, actualDescription, "Epic description should be the same");
+        assertEquals(expectedStatus, actualStatus, "Epic status should be the same");
+    }
+
+    @Test
+    void updateEpic() {
+        final String expectedName = "nameUpdate";
+        final String expectedDescription = "descriptionUpdate";
+        final Status expectedStatus = Status.IN_PROGRESS;
+
+        Epic expectedEpic = manager.createEpic(epic);
+
+        expectedEpic.setName(expectedName);
+        expectedEpic.setDescription(expectedDescription);
+        expectedEpic.setStatus(expectedStatus);
+        Epic actualEpic = manager.updateEpic(expectedEpic);
+
+        assertNotNull(actualEpic, "Epic should not be null");
+        assertEquals(expectedName, actualEpic.getName(), "Epic name should be the same");
+        assertEquals(expectedDescription, actualEpic.getDescription(), "Epic description should be the same");
+        assertNotEquals(expectedStatus, actualEpic.getStatus(), "Epic status should not be the same");
+    }
+
+    @Test
+    void deleteEpic() {
+        Epic expectedEpic = manager.createEpic(epic);
+        manager.deleteEpic(expectedEpic.getId());
+        Epic actualEpic = manager.getEpic(expectedEpic.getId());
+        assertNull(actualEpic, "Epic should be null");
+    }
+
+    @Test
+    void getEpics() {
+        final String expectedName = "name";
+        final String expectedDescription = "description";
+        manager.createEpic(epic);
+        ArrayList<Epic> actualEpics = manager.getEpics();
+        assertNotNull(actualEpics, "Epic should not be null");
+        assertEquals(1, actualEpics.size(), "Epic should not be empty");
+        assertEquals(expectedName, actualEpics.getFirst().getName(), "Epic name should be the same");
+        assertEquals(expectedDescription, actualEpics.getFirst().getDescription(), "Epic description should be the same");
+    }
+
+    @Test
+    void deleteEpics() {
+        manager.createEpic(epic);
+        manager.createEpic(new Epic("name", "description"));
+        manager.deleteAllEpics();
+        ArrayList<Epic> actualEpics = manager.getEpics();
+        assertEquals(0, actualEpics.size(), "Epic should be empty");
     }
 }
