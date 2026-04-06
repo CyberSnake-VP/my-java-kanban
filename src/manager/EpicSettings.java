@@ -21,6 +21,7 @@ public class EpicSettings {
 
         if (subtasks.isEmpty()) {
             epic.setStatus(Status.NEW);
+            return;
         }
 
         // флаги для анализа состояния подзадач у эпика

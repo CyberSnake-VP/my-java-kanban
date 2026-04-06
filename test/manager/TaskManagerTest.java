@@ -7,6 +7,8 @@ import tasks.Epic;
 import tasks.Subtask;
 import tasks.Task;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -19,6 +21,10 @@ public abstract class TaskManagerTest <T extends TaskManager> {
 
     @BeforeEach
     abstract void setUp();
+
+    public Subtask createSubtaskInEpic(Epic epicWithId) {
+        return manager.createSubtask(new Subtask("name", "description", Status.NEW, Instant.now(), Duration.ofMinutes(1), epicWithId));
+    }
 
 
     @Test
@@ -163,5 +169,122 @@ public abstract class TaskManagerTest <T extends TaskManager> {
         manager.deleteAllEpics();
         ArrayList<Epic> actualEpics = manager.getEpics();
         assertEquals(0, actualEpics.size(), "Epic should be empty");
+    }
+
+
+
+
+    @Test
+    void createSubtask() {
+        final String expectedName = "name";
+        final String expectedDescription = "description";
+        final Status expectedStatus = Status.NEW;
+
+        Epic expectedEpic = manager.createEpic(epic);
+        Subtask expectedSubtask = createSubtaskInEpic(expectedEpic);
+        Subtask actualSubtask = manager.getSubtask(expectedSubtask.getId());
+        final String actualName = actualSubtask.getName();
+        final String actualDescription = actualSubtask.getDescription();
+        final Status actualStatus = actualSubtask.getStatus();
+
+        assertNotNull(actualSubtask, "Subtask should not be null");
+        assertEquals(expectedName, actualName, "Subtask name should be the same");
+        assertEquals(expectedDescription, actualDescription, "Subtask description should be the same");
+        assertEquals(expectedStatus, actualStatus, "Subtask status should be the same");
+    }
+
+    @Test
+    void updateSubtask() {
+        final String expectedName = "nameUpdate";
+        final String expectedDescription = "descriptionUpdate";
+        final Status expectedStatus = Status.IN_PROGRESS;
+
+        Epic expectedEpic = manager.createEpic(epic);
+        Subtask expectedSubtask = createSubtaskInEpic(expectedEpic);
+        expectedSubtask.setName(expectedName);
+        expectedSubtask.setDescription(expectedDescription);
+        expectedSubtask.setStatus(expectedStatus);
+        Subtask actualSubtask = manager.updateSubtask(expectedSubtask);
+        final String actualName = actualSubtask.getName();
+        final String actualDescription = actualSubtask.getDescription();
+        final Status actualStatus = actualSubtask.getStatus();
+
+
+        assertNotNull(actualSubtask, "Subtask should not be null");
+        assertEquals(expectedName, actualName, "Subtask name should be the same");
+        assertEquals(expectedDescription, actualDescription, "Subtask description should be the same");
+        assertEquals(expectedStatus, actualStatus, "Subtask status should be the same");
+    }
+
+    @Test
+    void deleteSubtask() {
+        Epic expectedEpic = manager.createEpic(epic);
+        Subtask expectedSubtask = createSubtaskInEpic(expectedEpic);
+
+        manager.deleteSubtask(expectedSubtask.getId());
+        Subtask actualSubtask = manager.getSubtask(expectedSubtask.getId());
+
+        assertNull(actualSubtask, "Subtask should be null");
+    }
+
+    @Test
+    void getSubtasks() {
+        final String expectedName = "name";
+        final String expectedDescription = "description";
+        final Status expectedStatus = Status.NEW;
+        Epic expectedEpic = manager.createEpic(epic);
+        createSubtaskInEpic(expectedEpic);
+
+        ArrayList<Subtask> actualSubtasks = manager.getSubtasks();
+
+        assertNotNull(actualSubtasks, "Subtasks should not be null");
+        assertEquals(1, actualSubtasks.size(), "Subtasks should not be empty");
+        assertEquals(expectedName, actualSubtasks.getFirst().getName(), "Subtask name should be the same");
+        assertEquals(expectedDescription, actualSubtasks.getFirst().getDescription(), "Subtask description should be the same");
+        assertEquals(expectedStatus, actualSubtasks.getFirst().getStatus(), "Subtask status should be the same");
+    }
+
+    @Test
+    void deleteAllSubtasks() {
+        Epic expectedEpic = manager.createEpic(epic);
+        createSubtaskInEpic(expectedEpic);
+
+        manager.deleteAllSubtasks();
+        ArrayList<Subtask> actualSubtasks = manager.getSubtasks();
+
+        assertNotNull(actualSubtasks, "Subtasks should not be null");
+        assertEquals(0, actualSubtasks.size(), "Subtasks should not be empty");
+    }
+
+    @Test
+    void shouldBeEpicStatusNew() {
+        Status expectedStatus = Status.NEW;
+
+        Epic expectedEpic = manager.createEpic(epic);
+        Subtask expectedSubtask = createSubtaskInEpic(expectedEpic);
+        expectedSubtask.setStatus(Status.IN_PROGRESS);
+        manager.updateSubtask(expectedSubtask);
+        manager.deleteSubtask(expectedSubtask.getId());
+        Epic actualEpic = manager.getEpic(expectedEpic.getId());
+        final Status actualStatus = actualEpic.getStatus();
+
+        assertEquals(expectedStatus, actualStatus, "Epic status should be the same");
+    }
+
+    @Test
+    void shouldBeEpicStatusInProgress() {
+        Status expectedStatus = Status.IN_PROGRESS;
+
+         Epic expectedEpic = manager.createEpic(epic);
+         Subtask expectedSubtask = createSubtaskInEpic(expectedEpic);
+         Subtask expectedSubtask2 = manager.createSubtask(new Subtask("name", "description", Status.NEW, Instant.now(), Duration.ofMinutes(1), epic));
+         expectedSubtask.setStatus(Status.NEW);
+         expectedSubtask2.setStatus(Status.DONE);
+         manager.updateSubtask(expectedSubtask);
+         manager.updateSubtask(expectedSubtask2);
+         Epic actualEpic = manager.getEpic(expectedEpic.getId());
+         final Status actualStatus = actualEpic.getStatus();
+
+         assertEquals(expectedStatus, actualStatus, "Epic status should be the same");
     }
 }

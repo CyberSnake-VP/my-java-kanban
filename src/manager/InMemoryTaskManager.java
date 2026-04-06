@@ -1,5 +1,6 @@
 package manager;
 
+import status.Status;
 import tasks.Epic;
 import tasks.Subtask;
 import tasks.Task;
@@ -134,7 +135,83 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void deleteAllEpics() {
-       epics.clear();
-       subtasks.clear();
+        epics.clear();
+        subtasks.clear();
     }
+
+
+    /// ------------------------ SUBTASKS METHODS ----------------------------------
+
+    @Override
+    public Subtask createSubtask(Subtask subtask) {
+        if (subtasks.containsValue(subtask) || !epics.containsKey(subtask.getEpicId())) {
+            return null;
+        }
+
+        subtask.setId(generateId());
+        Epic epic = epics.get(subtask.getEpicId());
+        epic.setSubtaskIdList(subtask.getId());
+        subtasks.put(subtask.getId(), new Subtask(subtask));
+        EpicSettings.setStatus(epic, getSubtasksListInEpic(epic));
+        return subtask;
+    }
+
+    @Override
+    public Subtask getSubtask(Integer id) {
+        if (subtasks.containsKey(id)) {
+            Subtask subtask = subtasks.get(id);
+            return new Subtask(subtask);
+        }
+        return null;
+    }
+
+    @Override
+    public ArrayList<Subtask> getSubtasks() {
+        return new ArrayList<Subtask>(subtasks.values());
+    }
+
+    @Override
+    public Subtask updateSubtask(Subtask subtask) {
+        if (subtasks.containsValue(subtask)) {
+            Epic epic = epics.get(subtask.getEpicId());
+            subtasks.put(subtask.getId(), new Subtask(subtask));
+            EpicSettings.setStatus(epic, getSubtasksListInEpic(epic));
+            return subtask;
+        }
+        return null;
+    }
+
+    @Override
+    public void deleteSubtask(Integer id) {
+        //находим подзадачу
+        Subtask subtask = subtasks.get(id);
+        // получаем ее эпик и удаляем подзадачу из его списка
+        Epic epic = epics.get(subtask.getEpicId());
+        epic.getSubtaskIdList().remove(id);
+
+        EpicSettings.setStatus(epic, getSubtasksListInEpic(epic));
+        subtasks.remove(id);
+    }
+
+    @Override
+    public void deleteAllSubtasks() {
+        subtasks.clear();
+        epics.values().forEach(epic -> {
+            epic.getSubtaskIdList().clear();
+            epic.setStatus(Status.NEW);
+        });
+    }
+
+    @Override
+    public void deleteAllSubtasks(Epic epic) {
+        if(epics.containsValue(epic)) {
+            Epic epicToDelete = epics.get(epic.getId());
+            epicToDelete.getSubtaskIdList().clear();
+            epicToDelete.setStatus(Status.NEW);
+
+            ArrayList<Integer> subtaskIdList = epic.getSubtaskIdList();
+            subtasks.keySet().stream().filter(subtaskIdList::contains).forEach(subtasks::remove);
+        }
+    }
+
 }
