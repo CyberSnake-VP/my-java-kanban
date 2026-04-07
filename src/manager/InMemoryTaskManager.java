@@ -1,13 +1,14 @@
 package manager;
 
+import exceptions.IntersectionsException;
 import status.Status;
 import tasks.Epic;
 import tasks.Subtask;
 import tasks.Task;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.*;
 
 public class InMemoryTaskManager implements TaskManager {
     protected Integer id = 1;
@@ -17,6 +18,9 @@ public class InMemoryTaskManager implements TaskManager {
     protected final HashMap<Integer, Subtask> subtasks = new HashMap<>();
     // список просмотренных задач(история просмотров)
     protected final HistoryManager history = Managers.getDefaultHistory();
+
+    // используем дерево для списка приоритета задач и сортируем его по времени начала
+    protected Set<Task> prioritizedTasks = new TreeSet<>(Comparator.comparing(Task::getStartTime));
 
     private Integer generateId() {
         return id++;
@@ -33,6 +37,7 @@ public class InMemoryTaskManager implements TaskManager {
 
         // записываем задачу
         tasks.put(task.getId(), new Task(task));
+        addInPriority(new Task(task));
         return task;
     }
 
@@ -51,6 +56,8 @@ public class InMemoryTaskManager implements TaskManager {
     public Task updateTask(Task task) {
         if (tasks.containsValue(task)) {
             tasks.put(task.getId(), new Task(task));
+            prioritizedTasks.remove(task);
+            addInPriority(task);
             return task;
         }
         return null;
@@ -58,6 +65,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void deleteTask(Integer id) {
+        prioritizedTasks.remove(tasks.get(id));
         history.remove(id);
         tasks.remove(id);
     }
@@ -69,9 +77,9 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void deleteAllTasks() {
-        tasks.values().stream()
-                .map(Task::getId)
-                .forEach(history::remove);
+        tasks.values().forEach(prioritizedTasks::remove);
+        tasks.keySet().forEach(history::remove);
+
         tasks.clear();
     }
 
@@ -236,6 +244,37 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public List<Task> getHistory() {
         return history.getHistory();
+    }
+
+
+    @Override
+    public List<Task> getPrioritized() {
+        return new ArrayList<>(prioritizedTasks);
+    }
+
+    // добавляем задачу в список приоритета только с указанным временем начала и продолжительности
+    protected void addInPriority(Task task) {
+        // у задачи должны быть заданы время начала и продолжительность
+        Instant startTime = task.getStartTime();
+        Duration duration = task.getDuration();
+
+        if (startTime != null && duration != null && isValidIntersection(task)) {
+            prioritizedTasks.add(task);
+            return;
+        }
+
+        throw new IntersectionsException("Task is not in prioritized list");
+    }
+
+    private boolean isValidIntersection(Task task) {
+        if (getPrioritized().isEmpty()) {
+            return true;
+        }
+        // startTime <= endTime(в списке) && endTime >= startTime( в списке)
+        return getPrioritized().stream()
+                .noneMatch(t-> task.getStartTime().isBefore(t.getEndTime())
+                                && task.getEndTime().isAfter(t.getStartTime())
+                        );
     }
 
 }

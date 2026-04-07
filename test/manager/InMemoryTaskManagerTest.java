@@ -13,7 +13,7 @@ public class InMemoryTaskManagerTest extends TaskManagerTest<TaskManager>{
     @Override
     void setUp() {
        manager = Managers.getDefault();
-       task = new Task("name", "description", Instant.now(), Duration.ofMinutes(1));
+       task = new Task("name", "description", Instant.now(), Duration.ofMinutes(10));
        epic = new Epic("name", "description");
     }
 }

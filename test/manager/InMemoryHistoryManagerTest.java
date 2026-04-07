@@ -8,6 +8,8 @@ import tasks.Task;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -141,7 +143,7 @@ public class InMemoryHistoryManagerTest extends InMemoryTaskManagerTest{
         String expectedName = "2";
 
         task = manager.createTask(task);
-        Task task2 = manager.createTask(new Task("2", "description", Instant.now(), Duration.ofMinutes(10)));
+        Task task2 = manager.createTask(new Task("2", "description", LocalDateTime.of(2027,1,1, 1,0,0).toInstant(ZoneOffset.UTC), Duration.ofMinutes(10)));
         manager.getTask(task.getId());
         manager.getTask(task2.getId());
         List<Task> tasks = manager.getHistory();
@@ -155,7 +157,7 @@ public class InMemoryHistoryManagerTest extends InMemoryTaskManagerTest{
         String expectedName = "2";
 
         task = manager.createTask(task);
-        Task task2 = manager.createTask(new Task("2", "description", Instant.now(), Duration.ofMinutes(10)));
+        Task task2 = manager.createTask(new Task("2", "description", LocalDateTime.of(2027,1,1, 1,0,0).toInstant(ZoneOffset.UTC), Duration.ofMinutes(10)));
         manager.getTask(task.getId());
         manager.getTask(task2.getId());
         manager.getTask(task.getId());

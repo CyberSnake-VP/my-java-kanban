@@ -1,5 +1,6 @@
 package manager;
 
+import exceptions.IntersectionsException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import status.Status;
@@ -9,11 +10,14 @@ import tasks.Task;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public abstract class TaskManagerTest <T extends TaskManager> {
+public abstract class TaskManagerTest<T extends TaskManager> {
 
     protected T manager;
     protected Task task;
@@ -49,24 +53,24 @@ public abstract class TaskManagerTest <T extends TaskManager> {
 
     @Test
     void updateTask() {
-         final String expectedName = "nameUpdate";
-         final String expectedDescription = "descriptionUpdate";
-         final Status expectedStatus = Status.IN_PROGRESS;
+        final String expectedName = "nameUpdate";
+        final String expectedDescription = "descriptionUpdate";
+        final Status expectedStatus = Status.IN_PROGRESS;
 
-         Task expectedTask = manager.createTask(task);
-         Task actualTask = manager.getTask(expectedTask.getId());
+        Task expectedTask = manager.createTask(task);
+        Task actualTask = manager.getTask(expectedTask.getId());
 
-         actualTask.setName(expectedName);
-         actualTask.setDescription(expectedDescription);
-         actualTask.setStatus(expectedStatus);
-         manager.updateTask(actualTask);
+        actualTask.setName(expectedName);
+        actualTask.setDescription(expectedDescription);
+        actualTask.setStatus(expectedStatus);
+        manager.updateTask(actualTask);
 
-         actualTask = manager.getTask(expectedTask.getId());
+        actualTask = manager.getTask(expectedTask.getId());
 
-         assertNotNull(actualTask, "Task should not be null");
-         assertEquals(expectedName, actualTask.getName(), "Task name should be the same");
-         assertEquals(expectedDescription, actualTask.getDescription(), "Task description should be the same");
-         assertEquals(expectedStatus, actualTask.getStatus(), "Task status should be the same");
+        assertNotNull(actualTask, "Task should not be null");
+        assertEquals(expectedName, actualTask.getName(), "Task name should be the same");
+        assertEquals(expectedDescription, actualTask.getDescription(), "Task description should be the same");
+        assertEquals(expectedStatus, actualTask.getStatus(), "Task status should be the same");
 
     }
 
@@ -172,8 +176,6 @@ public abstract class TaskManagerTest <T extends TaskManager> {
     }
 
 
-
-
     @Test
     void createSubtask() {
         final String expectedName = "name";
@@ -275,16 +277,46 @@ public abstract class TaskManagerTest <T extends TaskManager> {
     void shouldBeEpicStatusInProgress() {
         Status expectedStatus = Status.IN_PROGRESS;
 
-         Epic expectedEpic = manager.createEpic(epic);
-         Subtask expectedSubtask = createSubtaskInEpic(expectedEpic);
-         Subtask expectedSubtask2 = manager.createSubtask(new Subtask("name", "description", Status.NEW, Instant.now(), Duration.ofMinutes(1), epic));
-         expectedSubtask.setStatus(Status.NEW);
-         expectedSubtask2.setStatus(Status.DONE);
-         manager.updateSubtask(expectedSubtask);
-         manager.updateSubtask(expectedSubtask2);
-         Epic actualEpic = manager.getEpic(expectedEpic.getId());
-         final Status actualStatus = actualEpic.getStatus();
+        Epic expectedEpic = manager.createEpic(epic);
+        Subtask expectedSubtask = createSubtaskInEpic(expectedEpic);
+        Subtask expectedSubtask2 = manager.createSubtask(new Subtask("name", "description", Status.NEW, Instant.now(), Duration.ofMinutes(1), epic));
+        expectedSubtask.setStatus(Status.NEW);
+        expectedSubtask2.setStatus(Status.DONE);
+        manager.updateSubtask(expectedSubtask);
+        manager.updateSubtask(expectedSubtask2);
+        Epic actualEpic = manager.getEpic(expectedEpic.getId());
+        final Status actualStatus = actualEpic.getStatus();
 
-         assertEquals(expectedStatus, actualStatus, "Epic status should be the same");
+        assertEquals(expectedStatus, actualStatus, "Epic status should be the same");
+    }
+
+    @Test
+    void addPrioritizedTask() {
+        int expectedSize = 1;
+
+        task = manager.createTask(task);
+        List<Task> list = manager.getPrioritized();
+        int actualSize = list.size();
+
+        assertEquals(expectedSize, actualSize, "Prioritized tasks should be the same");
+    }
+
+    @Test
+    void shouldBeNotSaveTaskInPrioritized() {
+
+        manager.createTask(new Task("name", "description", LocalDateTime.of(2026,1,1, 1, 0, 0).toInstant(ZoneOffset.UTC), Duration.ofMinutes(10)));
+
+        assertThrows(IntersectionsException.class, () -> {
+            manager.createTask(new Task("name", "description", LocalDateTime.of(2026,1,1, 1, 0, 0).toInstant(ZoneOffset.UTC), Duration.ofMinutes(10)));
+        });
+    }
+
+    @Test
+    void shouldBeSaveTaskInNonPrioritized() {
+        manager.createTask(new Task("name", "description", LocalDateTime.of(2026,1,1, 1, 0, 0).toInstant(ZoneOffset.UTC), Duration.ofMinutes(10)));
+
+        assertDoesNotThrow(() -> {
+            manager.createTask(new Task("name", "description", LocalDateTime.of(2026,1,1, 0, 50, 0).toInstant(ZoneOffset.UTC), Duration.ofMinutes(10)));
+        }, "Not be exception this");
     }
 }
