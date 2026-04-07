@@ -4,7 +4,11 @@ import status.Status;
 import tasks.Epic;
 import tasks.Subtask;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Objects;
 
 public class EpicSettings {
     /**
@@ -53,5 +57,40 @@ public class EpicSettings {
             return;
         }
         epic.setStatus(Status.DONE);
+    }
+
+
+    public static void setEpicTime(Epic epic, ArrayList<Subtask> subtasks) {
+
+        if(subtasks.isEmpty()) {
+            epic.setStartTime(null);
+            epic.setDuration(null);
+            epic.setEndTime(null);
+            return;
+        }
+        
+        // устанавливаем значение время начала для эпика, если его нет то null
+        epic.setStartTime(
+                subtasks.stream()
+                        .map(Subtask::getStartTime)
+                        .filter(Objects::nonNull)
+                        .min(Instant::compareTo)
+                        .orElse(null)
+        );
+
+        epic.setDuration(
+                subtasks.stream()
+                        .map(Subtask::getDuration)
+                        .filter(Objects::nonNull)
+                        .reduce(Duration.ZERO, Duration::plus)
+        );
+
+        epic.setEndTime(
+                subtasks.stream()
+                        .map(Subtask::getEndTime)
+                        .filter(Objects::nonNull)
+                        .max(Instant::compareTo)
+                        .orElse(null)
+        );
     }
 }
