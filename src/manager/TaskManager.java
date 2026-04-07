@@ -5,6 +5,7 @@ import tasks.Subtask;
 import tasks.Task;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public interface TaskManager {
 
@@ -34,4 +35,7 @@ public interface TaskManager {
     void deleteAllSubtasks();
     void deleteAllSubtasks(Epic epic);
 
+
+    // метод для получения списка истории
+    List<Task> getHistory();
 }
