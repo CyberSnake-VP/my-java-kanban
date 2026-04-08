@@ -68,7 +68,7 @@ public class EpicSettings {
             epic.setEndTime(null);
             return;
         }
-        
+
         // устанавливаем значение время начала для эпика, если его нет то null
         epic.setStartTime(
                 subtasks.stream()
@@ -77,14 +77,14 @@ public class EpicSettings {
                         .min(Instant::compareTo)
                         .orElse(null)
         );
-
+        // так же с продолжительностью
         epic.setDuration(
                 subtasks.stream()
                         .map(Subtask::getDuration)
                         .filter(Objects::nonNull)
                         .reduce(Duration.ZERO, Duration::plus)
         );
-
+        // с временем окончания
         epic.setEndTime(
                 subtasks.stream()
                         .map(Subtask::getEndTime)

@@ -128,32 +128,46 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Epic updateEpic(Epic epic) {
-        if (epics.containsValue(epic)) {
             Epic epicToUpdate = epics.get(epic.getId());
-            epicToUpdate.setName(epic.getName());
-            epicToUpdate.setDescription(epic.getDescription());
-            epicToUpdate.setSubtaskIdList(epic.getSubtaskIdList());
-            // проверка статуса эпика
-            EpicSettings.setStatus(epicToUpdate, getSubtasksListInEpic(epic));
-            return new Epic(epicToUpdate);
-        }
+            if(epicToUpdate != null) {
+                epicToUpdate.setName(epic.getName());
+                epicToUpdate.setDescription(epic.getDescription());
+                epicToUpdate.setSubtaskIdList(new ArrayList<>(epic.getSubtaskIdList()));
+                // получение списка подзадач эпика один раз и использование несколько раз в последующем
+                ArrayList<Subtask> subtaskList = getSubtasksListInEpic(epic);
+                // проверка статуса эпика
+                EpicSettings.setStatus(epicToUpdate, subtaskList);
+                // проверка времени эпика
+                EpicSettings.setEpicTime(epicToUpdate, subtaskList);
+                return new Epic(epicToUpdate);
+            }
         return null;
     }
 
     @Override
     public void deleteEpic(Integer id) {
-        if (epics.containsKey(id)) {
             Epic epic = epics.get(id);
-            // удаляем по id его подзадач
-            epic.getSubtaskIdList().forEach(subtasks::remove);
-            history.remove(epic.getId());
-            epics.remove(id);
-        }
+            if(epic != null) {
+                // удаляю все подзадачи из списка приоритета
+                getSubtasksListInEpic(epic).forEach(subtask -> {
+                    prioritizedTasks.remove(subtask);
+                    subtasks.remove(subtask.getId());
+                    history.remove(subtask.getId());
+                });
+                history.remove(epic.getId());
+                epics.remove(id);
+            }
     }
 
     @Override
     public void deleteAllEpics() {
-        epics.values().stream().map(Epic::getId).forEach(history::remove);
+        epics.values().forEach(epic -> {
+           epic.getSubtaskIdList().forEach(subId->{
+               history.remove(subId);
+               prioritizedTasks.remove(subtasks.get(subId));
+           });
+           history.remove(epic.getId());
+        });
         epics.clear();
         subtasks.clear();
     }
