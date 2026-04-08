@@ -279,7 +279,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
         Epic expectedEpic = manager.createEpic(epic);
         Subtask expectedSubtask = createSubtaskInEpic(expectedEpic);
-        Subtask expectedSubtask2 = manager.createSubtask(new Subtask("name", "description", Status.NEW, Instant.now(), Duration.ofMinutes(1), epic));
+        Subtask expectedSubtask2 = manager.createSubtask(new Subtask("name", "description", Status.NEW, LocalDateTime.of(2026,1,1, 1, 0, 0).toInstant(ZoneOffset.UTC), Duration.ofMinutes(1), epic));
         expectedSubtask.setStatus(Status.NEW);
         expectedSubtask2.setStatus(Status.DONE);
         manager.updateSubtask(expectedSubtask);
@@ -318,5 +318,49 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         assertDoesNotThrow(() -> {
             manager.createTask(new Task("name", "description", LocalDateTime.of(2026,1,1, 0, 50, 0).toInstant(ZoneOffset.UTC), Duration.ofMinutes(10)));
         }, "Not be exception this");
+    }
+
+    @Test
+    void addSubtaskInPrioritized() {
+        int expectedSize = 1;
+        epic = manager.createEpic(epic);
+        createSubtaskInEpic(epic);
+        List<Task> list = manager.getPrioritized();
+        int actualSize = list.size();
+
+        assertEquals(expectedSize, actualSize, "Prioritized tasks should be the same");
+    }
+
+    @Test
+    void shouldBeInstallTimeAndDurationInEpic() {
+        Instant time = LocalDateTime.of(2026,1,1, 1, 0, 0).toInstant(ZoneOffset.UTC);
+        Duration duration = Duration.ofMinutes(10);
+        Instant endTime = time.plus(duration);
+
+        epic = manager.createEpic(epic);
+        Subtask subtask = createSubtaskInEpic(epic);
+        subtask.setStartTime(time);
+        subtask.setDuration(duration);
+        manager.updateSubtask(subtask);
+        Epic actualEpic = manager.getEpic(epic.getId());
+        final Instant actualStartTime = actualEpic.getStartTime();
+        final Duration actualDuration = actualEpic.getDuration();
+        final Instant actualEndTime = actualEpic.getEndTime();
+
+        assertEquals(time, actualStartTime, "Start time should be the same");
+        assertEquals(duration, actualDuration, "Duration should be the same");
+        assertEquals(endTime, actualEndTime, "End time should be the same");
+    }
+
+    @Test
+    void deleteTaskInPrioritized() {
+        int expectedSize = 0;
+
+        task = manager.createTask(task);
+        manager.deleteTask(task.getId());
+        List<Task> list = manager.getPrioritized();
+        int actualSize = list.size();
+
+        assertEquals(expectedSize, actualSize, "Prioritized tasks should be the same");
     }
 }
