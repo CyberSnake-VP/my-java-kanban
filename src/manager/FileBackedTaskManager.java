@@ -286,7 +286,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 //        // подзадача пересечется
 //        Subtask subtask3 = new Subtask("Подзадача3", "Эпик2",
 //                LocalDateTime.of(2025, 1, 1, 10, 0)
-//                        .toInstant(ZoneOffset.UTC), Duration.ofMinutes(65), epic2);
+//                        .toInstant(ZoneOffset.UTC), Duration.ofMinutes(60), epic2);
 //        fm.createSubtask(subtask1);
 //        fm.createSubtask(subtask2);
 //        fm.createSubtask(subtask3);
@@ -298,6 +298,11 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 //                    task.getDurationToString(), task.getEndTimeToString());
 //        }
         TaskManager fm = Managers.loadFromFile(new File("src/files/data.csv"));
+        Epic epic2 = fm.getEpic(4);
+        Subtask subtask3 = new Subtask("Подзадача3", "Эпик2",
+                LocalDateTime.of(2025, 1, 1, 10, 0)
+                        .toInstant(ZoneOffset.UTC), Duration.ofMinutes(60), epic2);
+        fm.createSubtask(subtask3);
         printTaskTest(fm);
     }
 
