@@ -11,18 +11,20 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 
-public class FileBackedTaskManager extends InMemoryTaskManager{
+public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private final File data;
 
-    public FileBackedTaskManager(File data){
+    public FileBackedTaskManager(File data) {
         this.data = data;
     }
 
-    public File getData(){
+    public File getData() {
         return data;
     }
 
@@ -38,7 +40,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager{
         String startTime = task.getStartTimeToString();
         String duration = task.getDurationToString();
         String endTime = task.getEndTimeToString();
-        if(type.equals(Type.SUBTASK.name())){
+        if (type.equals(Type.SUBTASK.name())) {
             epicId = Integer.toString(((Subtask) task).getEpicId());
         }
         return String.join(",", id, type, name, description, status, epicId, startTime, duration, endTime);
@@ -75,6 +77,47 @@ public class FileBackedTaskManager extends InMemoryTaskManager{
         }
     }
 
+    // десиреализация задачи из строки
+    private Task fromString(String value) {
+        String[] split = value.split(",");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy|HH:mm");
+        int id = Integer.parseInt(split[0]);
+        String type = split[1];
+        String name = split[2];
+        String description = split[3];
+        Status status = Status.valueOf(split[4]);
+        int epicId = (split[5].isBlank() ? 0 : Integer.parseInt(split[5]));
+        Instant startTime = (split[6].equals("null") ? null :
+                LocalDateTime.parse(split[6], formatter).toInstant(ZoneOffset.UTC));
+        Duration duration = (split[7].equals("null") ? null :
+                Duration.ofMinutes(Integer.parseInt(split[7])));
+        Instant endTime = (split[8].equals("null") ? null :
+                LocalDateTime.parse(split[8], formatter).toInstant(ZoneOffset.UTC));
+        // поле endTime не нужно высчитывать потому, что оно само высчитывается при создании задач
+
+        switch (type) {
+            case "TASK":
+                Task task = new Task(name, description, status, startTime, duration);
+                task.setId(id);
+                return task;
+            case "EPIC":
+                Epic epic = new Epic(name, description);
+                epic.setId(id);
+                epic.setStatus(status);
+                epic.setStartTime(startTime);
+                epic.setDuration(duration);
+                epic.setEndTime(endTime);
+                return epic;
+            case "SUBTASK":
+                Epic epicForSubtask = epics.get(epicId);
+                Subtask subtask = new Subtask(name, description, status, startTime, duration, epicForSubtask);
+                subtask.setId(id);
+                epicForSubtask.addSubtaskIdList(id);
+                return subtask;
+        }
+        return null;
+    }
+
 
     @Override
     public Task createTask(Task task) {
@@ -85,9 +128,9 @@ public class FileBackedTaskManager extends InMemoryTaskManager{
 
     @Override
     public Task updateTask(Task task) {
-       super.updateTask(task);
-       save();
-       return task;
+        super.updateTask(task);
+        save();
+        return task;
     }
 
     @Override
@@ -104,16 +147,16 @@ public class FileBackedTaskManager extends InMemoryTaskManager{
 
     @Override
     public Epic createEpic(Epic epic) {
-         super.createEpic(epic);
-         save();
-         return epic;
+        super.createEpic(epic);
+        save();
+        return epic;
     }
 
     @Override
     public Epic updateEpic(Epic epic) {
-         super.updateEpic(epic);
-         save();
-         return epic;
+        super.updateEpic(epic);
+        save();
+        return epic;
     }
 
     @Override
@@ -130,16 +173,16 @@ public class FileBackedTaskManager extends InMemoryTaskManager{
 
     @Override
     public Subtask createSubtask(Subtask subtask) {
-         super.createSubtask(subtask);
-         save();
-         return subtask;
+        super.createSubtask(subtask);
+        save();
+        return subtask;
     }
 
     @Override
     public Subtask updateSubtask(Subtask subtask) {
-         super.updateSubtask(subtask);
-         save();
-         return subtask;
+        super.updateSubtask(subtask);
+        save();
+        return subtask;
     }
 
     @Override
@@ -201,6 +244,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager{
                     task.getName(), task.getDescription(), task.getStatus(), task.getId(), task.getStartTimeToString(),
                     task.getDurationToString(), task.getEndTimeToString());
         }
-        
+
     }
 }
