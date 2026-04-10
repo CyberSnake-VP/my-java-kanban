@@ -1,5 +1,6 @@
 package tasks;
 
+import manager.Type;
 import status.Status;
 
 import java.time.Instant;
@@ -58,5 +59,10 @@ public class Epic extends Task {
               ", duration=" + getDurationToString() +
               ", endTime=" + getEndTimeToString() +
               '}';
+   }
+
+   @Override
+   public Type getType() {
+      return Type.EPIC;
    }
 }
