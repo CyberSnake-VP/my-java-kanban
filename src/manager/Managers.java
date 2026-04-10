@@ -9,7 +9,7 @@ public class Managers {
     public static HistoryManager getDefaultHistory() {
         return new InMemoryHistoryManager();
     }
-    public static TaskManager getFileBackedTaskManager(File data) {
-        return new FileBackedTaskManager(data);
+    public static TaskManager loadFromFile(File data) {
+        return FileBackedTaskManager.loadFromFile(data);
     }
 }

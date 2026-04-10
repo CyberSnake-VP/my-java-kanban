@@ -1,5 +1,6 @@
 package manager;
 
+import exceptions.ManagerBackupException;
 import exceptions.ManagerSaveException;
 import status.Status;
 import tasks.Epic;
@@ -10,11 +11,13 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.file.Files;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
 
@@ -116,6 +119,56 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 return subtask;
         }
         return null;
+    }
+
+
+
+    // заполняем хранилище
+    private void putToMaps(Task task) {
+        Type type = task.getType();
+        int id = task.getId();
+        switch (type) {
+            case TASK -> tasks.put(id, task);
+            case EPIC -> epics.put(id, (Epic)task);
+            case SUBTASK -> subtasks.put(id, (Subtask)task);
+        }
+    }
+
+    public static FileBackedTaskManager loadFromFile(File file) {
+        try {
+            // счетчик id задач, чтобы установить значение id равное последней задачи
+            int count = 0;
+
+            FileBackedTaskManager manager = new FileBackedTaskManager(file);
+            List<String> lines = Files.readAllLines(file.toPath());
+            if(lines.isEmpty()) {
+                return manager;
+            }
+            for (String line : lines) {
+                if(!Character.isDigit(line.charAt(0))) {
+                    continue;
+                }
+                Task task = manager.fromString(line);
+                manager.putToMaps(task);
+
+
+                // обновляем наш счетчик id
+                if (count < task.getId()){
+                    count = task.getId();
+                }
+
+            }
+
+            manager.setNextId(count);
+
+            return manager;
+        } catch (IOException e) {
+            throw new ManagerBackupException("Ошибка при загрузки из файла");
+        }
+    }
+
+    private void setNextId(int count) {
+        id = count + 1;
     }
 
 
@@ -244,6 +297,35 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     task.getName(), task.getDescription(), task.getStatus(), task.getId(), task.getStartTimeToString(),
                     task.getDurationToString(), task.getEndTimeToString());
         }
+        printTaskTest(fm);
 
+
+
+
+    }
+
+    static void printTaskTest(TaskManager fbm) {
+        fbm.getTasks().forEach(task -> {
+            System.out.printf("%-10S | %-8s | статус: %-12S | id%-2d | старт: %-15S |  %-3s минут | завершение: %-15s \n",
+                    task.getName(), task.getDescription(), task.getStatus().name(), task.getId(),
+                    task.getStartTimeToString(), task.getDurationToString(), task.getEndTimeToString());
+        });
+
+        System.out.println();
+
+        fbm.getEpics().forEach(epic -> {
+            System.out.printf("%-10S | %-8s | статус: %-12S | id%-2d | старт: %-15S |  %-3s минут | завершение: %-15s \n",
+                    epic.getName(), epic.getDescription(), epic.getStatus().name(), epic.getId(),
+                    epic.getStartTimeToString(), epic.getDurationToString(), epic.getEndTimeToString());
+        });
+
+        System.out.println();
+
+        fbm.getSubtasks().forEach(subtask -> {
+            System.out.printf("%-10S | %-8s | статус: %-12S | id%-2d | старт: %-15S |  %-3s минут | завершение: %-15s \n",
+                    subtask.getName(), subtask.getDescription(), subtask.getStatus().name(), subtask.getId(),
+                    subtask.getStartTimeToString(), subtask.getDurationToString(), subtask.getEndTimeToString());
+        });
+        System.out.println("\n");
     }
 }
