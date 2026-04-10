@@ -83,7 +83,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     // десиреализация задачи из строки
     private Task fromString(String value) {
         String[] split = value.split(",");
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy|HH:mm");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy|HH:mm");
         int id = Integer.parseInt(split[0]);
         String type = split[1];
         String name = split[2];
@@ -258,50 +258,47 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     public static void main(String[] args) {
 //        System.out.println(System.getProperty("user.dir"));
-        TaskManager fm = new FileBackedTaskManager(new File("src/files/data.csv"));
-        Task task1 = new Task("Задача1", "Описание",
-                LocalDateTime.of(2025, 1, 1, 11, 0, 0)
-                        .toInstant(ZoneOffset.UTC), Duration.ofMinutes(60));
-
-        Task task2 = new Task("Задача2", "Описание", Status.IN_PROGRESS,
-                LocalDateTime.of(2025, 1, 1, 12, 0)
-                        .toInstant(ZoneOffset.UTC), Duration.ofMinutes(60));
-
-        fm.createTask(task1);
-        fm.createTask(task2);
-
-        Epic epic1 = new Epic("Эпик1", "Действие");
-        Epic epic2 = new Epic("Эпик2", "Действие");
-        fm.createEpic(epic1);
-        fm.createEpic(epic2);
-
-
-        Subtask subtask1 = new Subtask("Подзадача1", "Эпик1", Status.DONE,
-                LocalDateTime.of(2025, 1, 1, 13, 50)
-                        .toInstant(ZoneOffset.UTC), Duration.ofMinutes(60), epic1);
-        Subtask subtask2 = new Subtask("Подзадача2", "Эпик1",
-                LocalDateTime.of(2025, 1, 1, 14, 50)
-                        .toInstant(ZoneOffset.UTC), Duration.ofMinutes(60), epic1);
-
-        // подзадача пересечется
-        Subtask subtask3 = new Subtask("Подзадача3", "Эпик2",
-                LocalDateTime.of(2025, 1, 1, 10, 0)
-                        .toInstant(ZoneOffset.UTC), Duration.ofMinutes(65), epic2);
-        fm.createSubtask(subtask1);
-        fm.createSubtask(subtask2);
-        fm.createSubtask(subtask3);
-
-        System.out.println("ПРИОРИТЕТ ВЫПОЛНЕНИЯ ЗАДАЧ:");
-        for (Task task : fm.getPrioritized()) {
-            System.out.printf("%-10S | %-8s | статус: %-12S | id%-2d | старт: %-15s | %-3s минут | завершение: %-15s %n",
-                    task.getName(), task.getDescription(), task.getStatus(), task.getId(), task.getStartTimeToString(),
-                    task.getDurationToString(), task.getEndTimeToString());
-        }
+//        TaskManager fm = new FileBackedTaskManager(new File("src/files/data.csv"));
+//        Task task1 = new Task("Задача1", "Описание",
+//                LocalDateTime.of(2025, 1, 1, 11, 0, 0)
+//                        .toInstant(ZoneOffset.UTC), Duration.ofMinutes(60));
+//
+//        Task task2 = new Task("Задача2", "Описание", Status.IN_PROGRESS,
+//                LocalDateTime.of(2025, 1, 1, 12, 0)
+//                        .toInstant(ZoneOffset.UTC), Duration.ofMinutes(60));
+//
+//        fm.createTask(task1);
+//        fm.createTask(task2);
+//
+//        Epic epic1 = new Epic("Эпик1", "Действие");
+//        Epic epic2 = new Epic("Эпик2", "Действие");
+//        fm.createEpic(epic1);
+//        fm.createEpic(epic2);
+//
+//
+//        Subtask subtask1 = new Subtask("Подзадача1", "Эпик1", Status.DONE,
+//                LocalDateTime.of(2025, 1, 1, 13, 50)
+//                        .toInstant(ZoneOffset.UTC), Duration.ofMinutes(60), epic1);
+//        Subtask subtask2 = new Subtask("Подзадача2", "Эпик1",
+//                LocalDateTime.of(2025, 1, 1, 14, 50)
+//                        .toInstant(ZoneOffset.UTC), Duration.ofMinutes(60), epic1);
+//
+//        // подзадача пересечется
+//        Subtask subtask3 = new Subtask("Подзадача3", "Эпик2",
+//                LocalDateTime.of(2025, 1, 1, 10, 0)
+//                        .toInstant(ZoneOffset.UTC), Duration.ofMinutes(65), epic2);
+//        fm.createSubtask(subtask1);
+//        fm.createSubtask(subtask2);
+//        fm.createSubtask(subtask3);
+//
+//        System.out.println("ПРИОРИТЕТ ВЫПОЛНЕНИЯ ЗАДАЧ:");
+//        for (Task task : fm.getPrioritized()) {
+//            System.out.printf("%-10S | %-8s | статус: %-12S | id%-2d | старт: %-15s | %-3s минут | завершение: %-15s %n",
+//                    task.getName(), task.getDescription(), task.getStatus(), task.getId(), task.getStartTimeToString(),
+//                    task.getDurationToString(), task.getEndTimeToString());
+//        }
+        TaskManager fm = Managers.loadFromFile(new File("src/files/data.csv"));
         printTaskTest(fm);
-
-
-
-
     }
 
     static void printTaskTest(TaskManager fbm) {
