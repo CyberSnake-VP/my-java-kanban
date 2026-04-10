@@ -1,6 +1,7 @@
 package httpservers;
 
 import com.sun.net.httpserver.HttpServer;
+import manager.Managers;
 import manager.TaskManager;
 
 import java.io.IOException;
@@ -13,6 +14,11 @@ public class HttpTaskServer {
 
     public HttpTaskServer(TaskManager manager) {
         this.manager = manager;
+    }
+
+    public static void main(String[] args) throws IOException {
+        System.out.println("Starting HttpTaskServer on port " + PORT);
+        new HttpTaskServer(Managers.getDefault()).start();
     }
 
     public void start() throws IOException {
