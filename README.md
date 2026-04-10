@@ -11,7 +11,7 @@
 - 🚫 Проверка пересечения задач по времени
 
 ## ‍👨‍💻 Автор
-CyberSnake-VP
-GitHub: CyberSnake-VP
+CyberSnake-VP  
+GitHub: [CyberSnake-VP](https://github.com/CyberSnake-VP)
 
 
