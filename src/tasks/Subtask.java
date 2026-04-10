@@ -1,5 +1,6 @@
 package tasks;
 
+import manager.Type;
 import status.Status;
 
 import java.time.Duration;
@@ -43,5 +44,10 @@ public class Subtask extends Task {
                 ", endTime=" + getEndTimeToString() +
                 ", epicId=" + epicId +
                 '}';
+    }
+
+    @Override
+    public Type getType() {
+        return Type.SUBTASK;
     }
 }

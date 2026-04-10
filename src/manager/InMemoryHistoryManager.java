@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class inMemoryHistoryManager implements HistoryManager{
+public class InMemoryHistoryManager implements HistoryManager{
     private final Map<Integer, Node> history = new HashMap<>();
 
     // превращаем inMemoryHistoryManager в функционал связного списка

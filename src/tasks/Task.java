@@ -1,5 +1,6 @@
 package tasks;
 
+import manager.Type;
 import status.Status;
 
 import java.time.Duration;
@@ -160,5 +161,9 @@ public class Task {
     @Override
     public int hashCode() {
         return Objects.hashCode(id);
+    }
+
+    public Type getType() {
+        return Type.TASK;
     }
 }
