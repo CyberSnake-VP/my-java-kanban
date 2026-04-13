@@ -6,10 +6,14 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import exceptions.JsonSyntaxException;
 import httpservers.adapters.DurationAdapter;
+import httpservers.adapters.InstantAdapter;
 import manager.TaskManager;
 
 import java.io.IOException;
+import java.io.PipedReader;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.Instant;
 
 public abstract class BaseHandler implements HttpHandler {
     protected TaskManager manager;
@@ -22,33 +26,64 @@ public abstract class BaseHandler implements HttpHandler {
     protected final int INTERNAL_SERVER_ERROR = 500;
 
 
-    public BaseHandler (TaskManager manager) {
+    public BaseHandler(TaskManager manager) {
         this.manager = manager;
         jsonMapper = new GsonBuilder()
                 .serializeNulls()
                 .registerTypeAdapter(Duration.class, new DurationAdapter())
+                .registerTypeAdapter(Instant.class, new InstantAdapter())
                 .create();
     }
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
-//        try {
-//            String path = exchange.getRequestURI().getPath();
-//            String method = exchange.getRequestMethod();
-//            switch (method) {
-//                case "GET":
-//                case "POST":
-//                case "DELETE":
-//                default:
-//            }
-//        } catch (IOException e) {
-//
-//        }
+    public void handle(HttpExchange exchange) throws IOException{
+        String path = exchange.getRequestURI().getPath();
+        String method = exchange.getRequestMethod();
+        try {
+            switch (method) {
+                case "GET":
+                    processGet(path, exchange);
+                    break;
+                case "POST":
+                    processPost(path, exchange);
+                    break;
+                case "DELETE":
+                    processDelete(path, exchange);
+                    break;
+                default:
+            }
+        } catch (IOException e) {
+            sendResponse(exchange, INTERNAL_SERVER_ERROR, "Внутренняя ошибка сервера");
+        }
 
 
     }
 
+    abstract void processGet(String path, HttpExchange exchange) throws IOException;
 
+    abstract void processPost(String path, HttpExchange exchange) throws IOException;
+
+    abstract void processDelete(String path, HttpExchange exchange) throws IOException;
+
+
+    protected void sendResponse(HttpExchange ex, int code, String message) throws IOException {
+        byte[] answer = message.getBytes(StandardCharsets.UTF_8);
+        ex.getResponseHeaders().add("Content-Type", "application/json");
+        ex.sendResponseHeaders(code, answer.length);
+        ex.getResponseBody().write(answer);
+        ex.getResponseBody().flush();
+        ex.close();
+    }
+
+
+    protected boolean isNumber(String str) {
+        try {
+            Integer.parseInt(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
 
 
 }
