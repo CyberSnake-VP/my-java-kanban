@@ -1,11 +1,15 @@
 package httpservers.handlers;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import exceptions.JsonSyntaxException;
+import httpservers.adapters.DurationAdapter;
 import manager.TaskManager;
 
 import java.io.IOException;
+import java.time.Duration;
 
 public abstract class BaseHandler implements HttpHandler {
     protected TaskManager manager;
@@ -18,23 +22,33 @@ public abstract class BaseHandler implements HttpHandler {
     protected final int INTERNAL_SERVER_ERROR = 500;
 
 
+    public BaseHandler (TaskManager manager) {
+        this.manager = manager;
+        jsonMapper = new GsonBuilder()
+                .serializeNulls()
+                .registerTypeAdapter(Duration.class, new DurationAdapter())
+                .create();
+    }
+
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        try {
-            String path = exchange.getRequestURI().getPath();
-            String method = exchange.getRequestMethod();
-            switch (method) {
-                case "GET":
-                case "POST":
-                case "DELETE":
-                default:
-            }
-        } catch (IOException e) {
+//        try {
+//            String path = exchange.getRequestURI().getPath();
+//            String method = exchange.getRequestMethod();
+//            switch (method) {
+//                case "GET":
+//                case "POST":
+//                case "DELETE":
+//                default:
+//            }
+//        } catch (IOException e) {
+//
+//        }
 
-        }
 
-        
     }
+
+
 
 
 }
