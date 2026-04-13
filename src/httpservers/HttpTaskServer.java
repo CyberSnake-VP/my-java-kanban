@@ -1,6 +1,7 @@
 package httpservers;
 
 import com.sun.net.httpserver.HttpServer;
+import httpservers.handlers.TaskHandler;
 import manager.Managers;
 import manager.TaskManager;
 
@@ -23,6 +24,7 @@ public class HttpTaskServer {
 
     public void start() throws IOException {
         server = HttpServer.create(new InetSocketAddress(PORT), 0);
+        server.createContext("/tasks", new TaskHandler(manager));
         server.start();
     }
 
