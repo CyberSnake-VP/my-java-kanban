@@ -23,6 +23,6 @@ public class DurationAdapter extends TypeAdapter<Duration> {
             in.nextNull();
             return null;
         }
-        return Duration.ofMinutes(in.nextInt());
+        return Duration.ofMinutes(in.nextLong());
     }
 }

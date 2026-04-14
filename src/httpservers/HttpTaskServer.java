@@ -28,7 +28,7 @@ public class HttpTaskServer {
         server.start();
     }
 
-    public void stop() throws IOException {
+    public void stop()  {
         server.stop(0);
     }
 }

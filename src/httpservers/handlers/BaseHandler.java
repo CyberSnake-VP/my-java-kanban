@@ -22,6 +22,7 @@ public abstract class BaseHandler implements HttpHandler {
     protected final int METHOD_NOT_ALLOWED = 405;
     protected final int NOT_ACCEPTABLE = 406;
     protected final int INTERNAL_SERVER_ERROR = 500;
+    protected final int BAD_REQUEST = 400;
 
 
     public BaseHandler(TaskManager manager) {
@@ -34,7 +35,7 @@ public abstract class BaseHandler implements HttpHandler {
     }
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException{
+    public void handle(HttpExchange exchange) {
         String path = exchange.getRequestURI().getPath();
         String method = exchange.getRequestMethod();
         try {
@@ -48,13 +49,15 @@ public abstract class BaseHandler implements HttpHandler {
                 case "DELETE":
                     processDelete(path, exchange);
                     break;
-                default:
+                default: sendResponse(exchange, METHOD_NOT_ALLOWED, "Method not allowed");
             }
         } catch (IOException e) {
-            sendResponse(exchange, INTERNAL_SERVER_ERROR, "Внутренняя ошибка сервера");
+            try {
+                sendResponse(exchange, INTERNAL_SERVER_ERROR, "Внутренняя ошибка сервера");
+            } catch (IOException ex) {
+                System.out.println("Не удалось отправить ответ: " + ex.getMessage());
+            }
         }
-
-
     }
 
     abstract void processGet(String path, HttpExchange exchange) throws IOException;

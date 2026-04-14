@@ -14,37 +14,79 @@ public class TaskHandler extends BaseHandler {
     private static final String NOT_FOUND_MESSAGE = "Такой задачи не существует";
     private static final String NOT_HAVE_NAME_MESSAGE = "Отсутствует название задачи";
     private static final String SERIALIZED_EXCEPTION_MESSAGE = "Ошибка при попытке десериализации тела запроса";
-
+    private static final String ANSWER_SERVER_EXCEPTION = "Ошибка при передаче ответа серверу";
+    private static final String BAD_REQUEST_MESSAGE = "Неверно указан адрес запроса";
 
     public TaskHandler(TaskManager manager) {
         super(manager);
     }
 
     @Override
-    void processGet(String path, HttpExchange exchange) throws IOException {
-
-    }
-
-    @Override
-    void processPost(String path, HttpExchange exchange) throws IOException {
+    void processGet(String path, HttpExchange exchange) {
+        // в блоке try я буду ловить ошибки IOException от sendResponse()
         try {
             String[] elements = path.split("/");
             if (elements.length == 2 && elements[1].equals("tasks")) {
+                getAllTask(exchange);
+                return;
+
+            } else if (elements.length == 3 && elements[1].equals("tasks") && isNumber(elements[2])) {
+                int id = Integer.parseInt(elements[2]);
+                getOneTask(exchange, id);
+                return;
+            }
+
+            sendResponse(exchange, BAD_REQUEST, BAD_REQUEST_MESSAGE);
+        } catch (IOException e) {
+            System.out.println(ANSWER_SERVER_EXCEPTION + e.getMessage());
+        }
+
+    }
+
+    private void getOneTask(HttpExchange exchange, int id) throws IOException {
+    }
+
+    private void getAllTask(HttpExchange exchange) throws IOException {
+    }
+
+
+    @Override
+    void processDelete(String path, HttpExchange exchange) throws IOException {
+
+    }
+
+
+    @Override
+    void processPost(String path, HttpExchange exchange) {
+        try {
+            String[] elements = path.split("/");
+            if (elements.length == 2) {
                 createOrUpdate(exchange);
                 return;
             }
 
-            sendResponse(exchange, NOT_FOUND, "Неверно указан адрес запроса");
-
+            sendResponse(exchange, BAD_REQUEST, BAD_REQUEST_MESSAGE);
+        } catch (IOException e) {
+            System.out.println(ANSWER_SERVER_EXCEPTION + e.getMessage());
         } catch (JsonErrorConverterException e) {
-            sendResponse(exchange, NOT_ACCEPTABLE, e.getMessage());
+            try {
+                sendResponse(exchange, BAD_REQUEST, e.getMessage());
+            } catch (IOException exception) {
+                System.out.println(ANSWER_SERVER_EXCEPTION + exception.getMessage());
+            }
+        } catch (IntersectionsException e) {
+            try {
+                sendResponse(exchange, NOT_ACCEPTABLE, e.getMessage());
+            } catch (IOException ex) {
+                System.out.println(ANSWER_SERVER_EXCEPTION + ex.getMessage());
+            }
         }
     }
 
-    private void createOrUpdate(HttpExchange exchange) throws IOException, JsonErrorConverterException {
-        byte[] body = exchange.getRequestBody().readAllBytes();
-        String json = new String(body);
+    private void createOrUpdate(HttpExchange exchange) throws JsonErrorConverterException, IOException, IntersectionsException {
         try {
+            byte[] body = exchange.getRequestBody().readAllBytes();
+            String json = new String(body);
             Task task = jsonMapper.fromJson(json, Task.class);
             // если у задачи отсутствует id будем создавать новую задачу
             if (task.getId() == null) {
@@ -68,11 +110,8 @@ public class TaskHandler extends BaseHandler {
 
         } catch (JsonSyntaxException e) {
             throw new JsonErrorConverterException(SERIALIZED_EXCEPTION_MESSAGE);
-        } catch (IntersectionsException e) {
-            sendResponse(exchange, NOT_ACCEPTABLE, e.getMessage());
         }
     }
-
 
     private Task createTask(Task task) throws JsonErrorConverterException {
         // валидация на наличие названия задачи
@@ -112,8 +151,5 @@ public class TaskHandler extends BaseHandler {
         return manager.updateTask(oldTask);
     }
 
-    @Override
-    void processDelete(String path, HttpExchange exchange) throws IOException {
 
-    }
 }
