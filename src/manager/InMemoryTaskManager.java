@@ -132,7 +132,6 @@ public class InMemoryTaskManager implements TaskManager {
             if(epicToUpdate != null) {
                 epicToUpdate.setName(epic.getName());
                 epicToUpdate.setDescription(epic.getDescription());
-                epicToUpdate.setSubtaskIdList(new ArrayList<>(epic.getSubtaskIdList()));
                 // получение списка подзадач эпика один раз и использование несколько раз в последующем
                 ArrayList<Subtask> subtaskList = getSubtasksListInEpic(epic);
                 // проверка статуса эпика
