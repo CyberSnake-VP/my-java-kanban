@@ -9,6 +9,8 @@ import status.Status;
 import tasks.Task;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TaskHandler extends BaseHandler {
     private static final String NOT_FOUND_MESSAGE = "Такой задачи не существует";
@@ -26,11 +28,11 @@ public class TaskHandler extends BaseHandler {
         // в блоке try я буду ловить ошибки IOException от sendResponse()
         try {
             String[] elements = path.split("/");
-            if (elements.length == 2 && elements[1].equals("tasks")) {
-                getAllTask(exchange);
+            if (elements.length == 2) {
+                getAllTasks(exchange);
                 return;
 
-            } else if (elements.length == 3 && elements[1].equals("tasks") && isNumber(elements[2])) {
+            } else if (elements.length == 3 && isNumber(elements[2])) {
                 int id = Integer.parseInt(elements[2]);
                 getOneTask(exchange, id);
                 return;
@@ -44,9 +46,19 @@ public class TaskHandler extends BaseHandler {
     }
 
     private void getOneTask(HttpExchange exchange, int id) throws IOException {
+        Task task = manager.getTask(id);
+        if (task == null) {
+            sendResponse(exchange, NOT_FOUND,  NOT_FOUND_MESSAGE);
+            return;
+        }
+        String jsonTask = jsonMapper.toJson(task, Task.class);
+        sendResponse(exchange, OK, jsonTask);
     }
 
-    private void getAllTask(HttpExchange exchange) throws IOException {
+    private void getAllTasks(HttpExchange exchange) throws IOException {
+        List<Task> tasks = manager.getTasks();
+        String jsonTasks = jsonMapper.toJson(tasks, List.class);
+        sendResponse(exchange, OK, jsonTasks);
     }
 
 
