@@ -48,17 +48,7 @@ public class TaskHandler extends BaseHandler {
             Task task = jsonMapper.fromJson(json, Task.class);
             // если у задачи отсутствует id будем создавать новую задачу
             if (task.getId() == null) {
-                // валидация на наличие названия задачи
-                if (task.getName() == null) {
-                    throw new JsonErrorConverterException(NOT_HAVE_NAME_MESSAGE);
-                }
-                // Проверяем статус задачи, если нет, то указываем. Т.к. задачу будем создавать на основе той, что
-                // в json, чтобы статус не стал null.
-                if (task.getStatus() == null) {
-                    task.setStatus(Status.NEW);
-                }
-                // создаем задачу в менеджере
-                Task createdTask = manager.createTask(task);
+                Task createdTask = createTask(task);
                 // переводим обратно в json
                 String jsonTask = jsonMapper.toJson(createdTask, Task.class);
                 // отправляем на сервер код ответа и json нашей задачи
@@ -67,30 +57,13 @@ public class TaskHandler extends BaseHandler {
             }
 
             // обновляем задачу
-            Task oldTask = manager.getTask(task.getId());
-            if (oldTask == null) {
-
+            Task updatedTask = updateTask(task);
+            if (updatedTask == null) {
                 sendResponse(exchange, NOT_FOUND, NOT_FOUND_MESSAGE);
                 return;
             }
-            if (task.getName() != null) {
-                oldTask.setName(task.getName());
-            }
-            if (task.getDescription() != null) {
-                oldTask.setDescription(task.getDescription());
-            }
-            if (task.getStatus() != null) {
-                oldTask.setStatus(task.getStatus());
-            }
-            if (task.getStartTime() != null) {
-                oldTask.setStartTime(task.getStartTime());
-            }
-            if (task.getDuration() != null) {
-                oldTask.setDuration(task.getDuration());
-            }
-            // может выдать intersectionsException
-            task = manager.updateTask(oldTask);
-            String taskJson = jsonMapper.toJson(task, Task.class);
+
+            String taskJson = jsonMapper.toJson(updatedTask, Task.class);
             sendResponse(exchange, OK, taskJson);
 
         } catch (JsonSyntaxException e) {
@@ -98,7 +71,45 @@ public class TaskHandler extends BaseHandler {
         } catch (IntersectionsException e) {
             sendResponse(exchange, NOT_ACCEPTABLE, e.getMessage());
         }
+    }
 
+
+    private Task createTask(Task task) throws JsonErrorConverterException {
+        // валидация на наличие названия задачи
+        if (task.getName() == null) {
+            throw new JsonErrorConverterException(NOT_HAVE_NAME_MESSAGE);
+        }
+        // Проверяем статус задачи, если нет, то указываем. Т.к. задачу будем создавать на основе той, что
+        // в json, чтобы статус не стал null.
+        if (task.getStatus() == null) {
+            task.setStatus(Status.NEW);
+        }
+        // создаем задачу в менеджере
+        return manager.createTask(task);
+    }
+
+    private Task updateTask(Task task) throws IntersectionsException {
+        Task oldTask = manager.getTask(task.getId());
+        if (oldTask == null) {
+            return null;
+        }
+        if (task.getName() != null) {
+            oldTask.setName(task.getName());
+        }
+        if (task.getDescription() != null) {
+            oldTask.setDescription(task.getDescription());
+        }
+        if (task.getStatus() != null) {
+            oldTask.setStatus(task.getStatus());
+        }
+        if (task.getStartTime() != null) {
+            oldTask.setStartTime(task.getStartTime());
+        }
+        if (task.getDuration() != null) {
+            oldTask.setDuration(task.getDuration());
+        }
+        // может выдать intersectionsException
+        return manager.updateTask(oldTask);
     }
 
     @Override
