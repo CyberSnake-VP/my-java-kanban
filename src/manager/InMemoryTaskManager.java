@@ -305,12 +305,15 @@ public class InMemoryTaskManager implements TaskManager {
         Instant startTime = task.getStartTime();
         Duration duration = task.getDuration();
 
-        if (startTime != null && duration != null && isValidIntersection(task)) {
-            prioritizedTasks.add(task);
-            return;
+        // добавлять в список приоритета в том случае, если пройдена валидация
+        if (startTime != null && duration != null) {
+            if(isValidIntersection(task)) {
+                prioritizedTasks.add(task);
+                return;
+            }
+            // валидация не пройдена выбрасываем исключение
+            throw new IntersectionsException("Task is not in prioritized list");
         }
-
-        throw new IntersectionsException("Task is not in prioritized list");
     }
 
     private boolean isValidIntersection(Task task) {
