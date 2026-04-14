@@ -13,11 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TaskHandler extends BaseHandler {
-    private static final String NOT_FOUND_MESSAGE = "Такой задачи не существует";
-    private static final String NOT_HAVE_NAME_MESSAGE = "Отсутствует название задачи";
-    private static final String SERIALIZED_EXCEPTION_MESSAGE = "Ошибка при попытке десериализации тела запроса";
-    private static final String ANSWER_SERVER_EXCEPTION = "Ошибка при передаче ответа серверу";
-    private static final String BAD_REQUEST_MESSAGE = "Неверно указан адрес запроса";
 
     public TaskHandler(TaskManager manager) {
         super(manager);
@@ -146,7 +141,7 @@ public class TaskHandler extends BaseHandler {
         }
     }
 
-    private Task createTask(Task task) throws JsonErrorConverterException {
+    private Task createTask(Task task) throws JsonErrorConverterException, IntersectionsException {
         // валидация на наличие названия задачи
         if (task.getName() == null) {
             throw new JsonErrorConverterException(NOT_HAVE_NAME_MESSAGE);

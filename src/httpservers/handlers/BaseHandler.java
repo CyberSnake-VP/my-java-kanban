@@ -23,6 +23,11 @@ public abstract class BaseHandler implements HttpHandler {
     protected final int NOT_ACCEPTABLE = 406;
     protected final int INTERNAL_SERVER_ERROR = 500;
     protected final int BAD_REQUEST = 400;
+    protected static final String NOT_FOUND_MESSAGE = "Такой задачи не существует";
+    protected static final String NOT_HAVE_NAME_MESSAGE = "Отсутствует название задачи";
+    protected static final String SERIALIZED_EXCEPTION_MESSAGE = "Ошибка при попытке десериализации тела запроса";
+    protected static final String ANSWER_SERVER_EXCEPTION = "Ошибка при передаче ответа серверу";
+    protected static final String BAD_REQUEST_MESSAGE = "Неверно указан адрес запроса";
 
 
     public BaseHandler(TaskManager manager) {
