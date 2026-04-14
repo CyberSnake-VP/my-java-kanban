@@ -63,8 +63,29 @@ public class TaskHandler extends BaseHandler {
 
 
     @Override
-    void processDelete(String path, HttpExchange exchange) throws IOException {
+    void processDelete(String path, HttpExchange exchange){
+        try {
+            String[]  elements = path.split("/");
+            if(elements.length == 3 && isNumber(elements[2])) {
+                int id = Integer.parseInt(elements[2]);
+                deleteOneTask(exchange, id);
+                return;
+            }
+            sendResponse(exchange, BAD_REQUEST, BAD_REQUEST_MESSAGE);
+        } catch (IOException e) {
+            System.out.println(ANSWER_SERVER_EXCEPTION + e.getMessage());
+        }
+    }
 
+    private void deleteOneTask(HttpExchange exchange, int id) throws IOException {
+        Task task = manager.getTask(id);
+        if (task == null) {
+            sendResponse(exchange, NOT_FOUND, NOT_FOUND_MESSAGE);
+            return;
+        }
+        manager.deleteTask(id);
+        String jsonTask = jsonMapper.toJson(task, Task.class);
+        sendResponse(exchange, OK, jsonTask);
     }
 
 

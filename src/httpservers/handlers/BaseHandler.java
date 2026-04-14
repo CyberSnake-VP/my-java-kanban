@@ -60,11 +60,11 @@ public abstract class BaseHandler implements HttpHandler {
         }
     }
 
-    abstract void processGet(String path, HttpExchange exchange) throws IOException;
+    abstract void processGet(String path, HttpExchange exchange) ;
 
-    abstract void processPost(String path, HttpExchange exchange) throws IOException;
+    abstract void processPost(String path, HttpExchange exchange);
 
-    abstract void processDelete(String path, HttpExchange exchange) throws IOException;
+    abstract void processDelete(String path, HttpExchange exchange);
 
 
     protected void sendResponse(HttpExchange ex, int code, String message) throws IOException {
