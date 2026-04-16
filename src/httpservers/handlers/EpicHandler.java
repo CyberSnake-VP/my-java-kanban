@@ -9,8 +9,13 @@ import status.Status;
 import tasks.Epic;
 
 import java.io.IOException;
+import java.util.List;
 
 public class EpicHandler extends BaseHandler {
+
+    private static final int EPIC_ID_PATH_LENGTH = 3;
+    private static final int EPIC_ID_IN_PATH = 2;
+    private static final int EPIC_WITHOUT_ID_PATH_LENGTH = 2;
 
     public EpicHandler(TaskManager manager) {
         super(manager);
@@ -18,14 +23,49 @@ public class EpicHandler extends BaseHandler {
 
     @Override
     void processGet(String path, HttpExchange exchange) {
+        try {
+            String[] elements = path.split("/");
+            if (elements.length == EPIC_ID_PATH_LENGTH) {
+                if (isNumber(elements[EPIC_ID_IN_PATH])) {
+                    int id = Integer.parseInt(elements[EPIC_ID_IN_PATH]);
+                    getOneEpic(exchange, id);
+                    return;
+                }
+                sendResponse(exchange, BAD_REQUEST, BAD_REQUEST_MESSAGE);
+                return;
+            }
+            if (elements.length == EPIC_WITHOUT_ID_PATH_LENGTH) {
+                getAllEpics(exchange);
+                return;
+            }
 
+            sendResponse(exchange, NOT_FOUND, NOT_FOUND_MESSAGE);
+        } catch (IOException e) {
+            System.out.println(ANSWER_SERVER_EXCEPTION + e.getMessage());
+        }
+    }
+
+    private void getAllEpics(HttpExchange exchange) throws IOException {
+        List<Epic> epics = manager.getEpics();
+        String json = jsonMapper.toJson(epics, List.class);
+        sendResponse(exchange, OK, json);
+    }
+
+    private void getOneEpic(HttpExchange exchange, int id) throws IOException {
+        Epic epic = manager.getEpic(id);
+        if (epic == null) {
+            sendResponse(exchange, NOT_FOUND, NOT_FOUND_MESSAGE);
+            return;
+        }
+        String json = jsonMapper.toJson(epic, Epic.class);
+        sendResponse(exchange, OK, json);
     }
 
     @Override
     void processPost(String path, HttpExchange exchange) {
         try {
             String[] elements = path.split("/");
-            if (elements.length == 2) {
+            if (elements.length == EPIC_WITHOUT_ID_PATH_LENGTH) {
                 createOrUpdate(exchange);
                 return;
             }
@@ -41,7 +81,7 @@ public class EpicHandler extends BaseHandler {
                 System.out.println(ANSWER_SERVER_EXCEPTION + e.getMessage());
             }
         } catch (JsonErrorConverterException e) {
-            try{
+            try {
                 sendResponse(exchange, BAD_REQUEST, e.getMessage());
             } catch (IOException exp) {
                 System.out.println(ANSWER_SERVER_EXCEPTION + e.getMessage());
