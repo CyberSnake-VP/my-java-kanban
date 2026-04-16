@@ -120,6 +120,9 @@ public class TaskHandler extends BaseHandler {
     private void createOrUpdate(HttpExchange exchange) throws JsonErrorConverterException, IOException, IntersectionsException {
         try {
             byte[] body = exchange.getRequestBody().readAllBytes();
+            if(body.length == 0){
+                throw new JsonErrorConverterException(EMPTY_REQUEST_BODY);
+            }
             String json = new String(body);
             Task task = jsonMapper.fromJson(json, Task.class);
             // если у задачи отсутствует id будем создавать новую задачу
