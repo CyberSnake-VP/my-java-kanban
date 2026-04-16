@@ -10,6 +10,7 @@ import tasks.Epic;
 import tasks.Subtask;
 
 import java.io.IOException;
+import java.util.List;
 
 public class SubtaskHandler extends BaseHandler{
   private static final int PATH_WITHOUT_ID = 2;
@@ -25,7 +26,42 @@ public class SubtaskHandler extends BaseHandler{
 
     @Override
     void processGet(String path, HttpExchange exchange) {
+        try {
+            String[] elements = path.split("/");
+            if(elements.length == PATH_WITH_ID) {
+                if(isNumber(elements[ID_IN_PATH])) {
+                    int id =  Integer.parseInt(elements[ID_IN_PATH]);
+                    getOneSubtask(exchange, id);
+                    return;
+                }
+                sendResponse(exchange, BAD_REQUEST, BAD_REQUEST_MESSAGE);
+                return;
+            }
+            if(elements.length == PATH_WITHOUT_ID) {
+                getAllSubtasks(exchange);
+                return;
+            }
+            sendResponse(exchange, NOT_FOUND, NOT_FOUND_MESSAGE);
 
+        } catch (IOException e) {
+            sendErrorResponse(exchange, INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    private void getAllSubtasks(HttpExchange exchange) throws IOException {
+        List<Subtask> subtasks = manager.getSubtasks();
+        String json = jsonMapper.toJson(subtasks, List.class);
+        sendResponse(exchange, OK, json);
+    }
+
+    private void getOneSubtask(HttpExchange exchange, int id) throws IOException {
+       Subtask subtask = manager.getSubtask(id);
+       if(subtask == null) {
+           sendResponse(exchange, NOT_FOUND, NOT_FOUND_MESSAGE);
+           return;
+       }
+       String json = jsonMapper.toJson(subtask, Subtask.class);
+       sendResponse(exchange, OK, json);
     }
 
     @Override
@@ -44,8 +80,6 @@ public class SubtaskHandler extends BaseHandler{
         } catch (IntersectionsException e) {
             sendErrorResponse(exchange, CONFLICT, e.getMessage());
         }
-
-
     }
 
     private void createOrUpdate(HttpExchange exchange) throws IOException, JsonErrorConverterException, IntersectionsException {
