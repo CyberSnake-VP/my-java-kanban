@@ -29,6 +29,7 @@ public abstract class BaseHandler implements HttpHandler {
     protected static final String SERIALIZED_EXCEPTION_MESSAGE = "Ошибка при попытке десериализации тела запроса";
     protected static final String ANSWER_SERVER_EXCEPTION = "Ошибка при передаче ответа серверу";
     protected static final String BAD_REQUEST_MESSAGE = "Неверно указан адрес запроса";
+    protected static final String EMPTY_REQUEST_BODY = "Отсутствует тело запроса";
 
 
     public BaseHandler(TaskManager manager) {

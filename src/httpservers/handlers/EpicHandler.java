@@ -85,6 +85,9 @@ public class EpicHandler extends BaseHandler {
     private void createOrUpdate(HttpExchange exchange) throws IOException, JsonErrorConverterException, IntersectionsException {
         try {
             byte[] body = exchange.getRequestBody().readAllBytes();
+            if(body.length == 0){
+                throw new JsonErrorConverterException(EMPTY_REQUEST_BODY);
+            }
             String bodyString = new String(body);
             Epic epic = jsonMapper.fromJson(bodyString, Epic.class);
             if (epic.getId() == null) {
