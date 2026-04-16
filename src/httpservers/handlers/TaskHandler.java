@@ -9,10 +9,13 @@ import status.Status;
 import tasks.Task;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class TaskHandler extends BaseHandler {
+
+    private static final int PATH_WITHOUT_ID = 2;
+    private static final int PATH_WITH_ID = 3;
+    private static final int ID_IN_PATH = 2;
 
     public TaskHandler(TaskManager manager) {
         super(manager);
@@ -23,17 +26,21 @@ public class TaskHandler extends BaseHandler {
         // в блоке try я буду ловить ошибки IOException от sendResponse()
         try {
             String[] elements = path.split("/");
-            if (elements.length == 2) {
+            if (elements.length == PATH_WITHOUT_ID) {
                 getAllTasks(exchange);
                 return;
 
-            } else if (elements.length == 3 && isNumber(elements[2])) {
-                int id = Integer.parseInt(elements[2]);
-                getOneTask(exchange, id);
+            } else if (elements.length == PATH_WITH_ID) {
+                if (isNumber(elements[ID_IN_PATH])) {
+                    int id = Integer.parseInt(elements[ID_IN_PATH]);
+                    getOneTask(exchange, id);
+                    return;
+                }
+
+                sendResponse(exchange, BAD_REQUEST, BAD_REQUEST_MESSAGE);
                 return;
             }
-
-            sendResponse(exchange, BAD_REQUEST, BAD_REQUEST_MESSAGE);
+            sendResponse(exchange, NOT_FOUND, NOT_FOUND_MESSAGE);
         } catch (IOException e) {
             System.out.println(ANSWER_SERVER_EXCEPTION + e.getMessage());
         }
@@ -43,7 +50,7 @@ public class TaskHandler extends BaseHandler {
     private void getOneTask(HttpExchange exchange, int id) throws IOException {
         Task task = manager.getTask(id);
         if (task == null) {
-            sendResponse(exchange, NOT_FOUND,  NOT_FOUND_MESSAGE);
+            sendResponse(exchange, NOT_FOUND, NOT_FOUND_MESSAGE);
             return;
         }
         String jsonTask = jsonMapper.toJson(task, Task.class);
@@ -58,17 +65,25 @@ public class TaskHandler extends BaseHandler {
 
 
     @Override
-    void processDelete(String path, HttpExchange exchange){
+    void processDelete(String path, HttpExchange exchange) {
         try {
-            String[]  elements = path.split("/");
-            if(elements.length == 3 && isNumber(elements[2])) {
-                int id = Integer.parseInt(elements[2]);
-                deleteOneTask(exchange, id);
+            String[] elements = path.split("/");
+            if(elements.length == PATH_WITHOUT_ID) {
+                sendResponse(exchange, METHOD_NOT_ALLOWED, "DELETE не поддерживается для /tasks");
+            }
+            if (elements.length == PATH_WITH_ID ) {
+                if(isNumber(elements[ID_IN_PATH])){
+                    int id = Integer.parseInt(elements[ID_IN_PATH]);
+                    deleteOneTask(exchange, id);
+                    return;
+                }
+                sendResponse(exchange, BAD_REQUEST, BAD_REQUEST_MESSAGE);
                 return;
             }
-            sendResponse(exchange, BAD_REQUEST, BAD_REQUEST_MESSAGE);
+            sendResponse(exchange, NOT_FOUND, NOT_FOUND_MESSAGE);
         } catch (IOException e) {
             System.out.println(ANSWER_SERVER_EXCEPTION + e.getMessage());
+            sendErrorResponse(exchange, INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 
@@ -79,8 +94,7 @@ public class TaskHandler extends BaseHandler {
             return;
         }
         manager.deleteTask(id);
-        String jsonTask = jsonMapper.toJson(task, Task.class);
-        sendResponse(exchange, OK, jsonTask);
+        sendResponse(exchange, NO_CONTENT, "");
     }
 
 
@@ -88,26 +102,18 @@ public class TaskHandler extends BaseHandler {
     void processPost(String path, HttpExchange exchange) {
         try {
             String[] elements = path.split("/");
-            if (elements.length == 2) {
+            if (elements.length == PATH_WITHOUT_ID) {
                 createOrUpdate(exchange);
                 return;
             }
-
             sendResponse(exchange, BAD_REQUEST, BAD_REQUEST_MESSAGE);
         } catch (IOException e) {
             System.out.println(ANSWER_SERVER_EXCEPTION + e.getMessage());
+            sendErrorResponse(exchange, INTERNAL_SERVER_ERROR, e.getMessage());
         } catch (JsonErrorConverterException e) {
-            try {
-                sendResponse(exchange, BAD_REQUEST, e.getMessage());
-            } catch (IOException exception) {
-                System.out.println(ANSWER_SERVER_EXCEPTION + exception.getMessage());
-            }
+            sendErrorResponse(exchange, BAD_REQUEST, e.getMessage());
         } catch (IntersectionsException e) {
-            try {
-                sendResponse(exchange, NOT_ACCEPTABLE, e.getMessage());
-            } catch (IOException ex) {
-                System.out.println(ANSWER_SERVER_EXCEPTION + ex.getMessage());
-            }
+            sendErrorResponse(exchange, CONFLICT, e.getMessage());
         }
     }
 
@@ -178,6 +184,5 @@ public class TaskHandler extends BaseHandler {
         // может выдать intersectionsException
         return manager.updateTask(oldTask);
     }
-
 
 }

@@ -20,9 +20,10 @@ public abstract class BaseHandler implements HttpHandler {
     protected final int CREATED = 201;
     protected final int NOT_FOUND = 404;
     protected final int METHOD_NOT_ALLOWED = 405;
-    protected final int NOT_ACCEPTABLE = 406;
+    protected final int CONFLICT = 406;
     protected final int INTERNAL_SERVER_ERROR = 500;
     protected final int BAD_REQUEST = 400;
+    protected final int NO_CONTENT = 204;
     protected static final String NOT_FOUND_MESSAGE = "Такой задачи не существует";
     protected static final String NOT_HAVE_NAME_MESSAGE = "Отсутствует название задачи";
     protected static final String SERIALIZED_EXCEPTION_MESSAGE = "Ошибка при попытке десериализации тела запроса";
@@ -73,10 +74,14 @@ public abstract class BaseHandler implements HttpHandler {
 
 
     protected void sendResponse(HttpExchange ex, int code, String message) throws IOException {
-        byte[] answer = message.getBytes(StandardCharsets.UTF_8);
         ex.getResponseHeaders().add("Content-Type", "application/json");
-        ex.sendResponseHeaders(code, answer.length);
-        ex.getResponseBody().write(answer);
+        if(code == NO_CONTENT) {
+            ex.sendResponseHeaders(code, -1);
+        } else {
+            byte[] responseBody = message.getBytes(StandardCharsets.UTF_8);
+            ex.sendResponseHeaders(code, responseBody.length);
+            ex.getResponseBody().write(responseBody);
+        }
         ex.getResponseBody().flush();
         ex.close();
     }
@@ -90,6 +95,15 @@ public abstract class BaseHandler implements HttpHandler {
             return false;
         }
     }
+
+    protected void sendErrorResponse(HttpExchange exchange, int code, String message) {
+        try {
+            sendResponse(exchange, code, message);
+        } catch (IOException e) {
+            System.out.println(ANSWER_SERVER_EXCEPTION + e.getMessage());
+        }
+    }
+
 
 
 }
