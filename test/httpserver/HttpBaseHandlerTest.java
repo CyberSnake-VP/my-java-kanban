@@ -14,10 +14,12 @@ import tasks.Task;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.Instant;
 
-public abstract class HttpBaseHandlerTest <T extends TaskManager>{
+public abstract class HttpBaseHandlerTest<T extends TaskManager> {
     // базовый тестовый класс
     // manager
     protected T manager;
@@ -25,7 +27,7 @@ public abstract class HttpBaseHandlerTest <T extends TaskManager>{
     protected HttpTaskServer server;
 
     protected final Gson jsonMapper = new GsonBuilder()
-
+            .serializeNulls()
             .registerTypeAdapter(Instant.class, new InstantAdapter())
             .registerTypeAdapter(Duration.class, new DurationAdapter())
             .create();
@@ -59,6 +61,37 @@ public abstract class HttpBaseHandlerTest <T extends TaskManager>{
     @AfterEach
     void tearDown() {
         server.stop();
+    }
+
+    // общие методы отправки запросов и получения ответов
+    protected HttpResponse<String> sendPostRequest(URI uri, String json) throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(uri)
+                .header("Content-Type", "application/json")
+                .timeout(Duration.ofSeconds(3))
+                .POST(HttpRequest.BodyPublishers.ofString(json))
+                .build();
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+    }
+
+    protected HttpResponse<String> sendGetRequest(URI uri) throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(uri)
+                .header("Content-Type", "application/json")
+                .timeout(Duration.ofSeconds(3))
+                .GET()
+                .build();
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+    }
+
+    protected HttpResponse<String> sendDeleteRequest(URI uri) throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(uri)
+                .header("Content-Type", "application/json")
+                .timeout(Duration.ofSeconds(3))
+                .DELETE()
+                .build();
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
     }
 
 }
