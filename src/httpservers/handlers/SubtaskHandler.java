@@ -155,7 +155,37 @@ public class SubtaskHandler extends BaseHandler{
 
     @Override
     void processDelete(String path, HttpExchange exchange) {
+        try {
+            String[] elements = path.split("/");
+            if(elements.length == PATH_WITHOUT_ID) {
+                sendResponse(exchange, METHOD_NOT_ALLOWED, "Delete не поддерживается для /subtasks");
+                return;
+            }
+            if(elements.length == PATH_WITH_ID) {
+                if(isNumber(elements[ID_IN_PATH])){
+                    int id =  Integer.parseInt(elements[ID_IN_PATH]);
+                    deleteSubtask(exchange, id);
+                    return;
+                }
+                sendResponse(exchange, BAD_REQUEST, BAD_REQUEST_MESSAGE);
+                return;
+            }
+            sendResponse(exchange, NOT_FOUND, NOT_FOUND_MESSAGE);
 
+        } catch (IOException e) {
+            sendErrorResponse(exchange, INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+
+    }
+
+    private void deleteSubtask(HttpExchange exchange, int id) throws IOException {
+        Subtask subtask = manager.getSubtask(id);
+        if(subtask == null) {
+            sendResponse(exchange, NOT_FOUND, NOT_FOUND_MESSAGE);
+            return;
+        }
+        manager.deleteSubtask(id);
+        sendResponse(exchange, NO_CONTENT, "");
     }
 
 
