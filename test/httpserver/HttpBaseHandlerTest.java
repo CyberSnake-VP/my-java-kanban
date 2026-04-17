@@ -43,6 +43,7 @@ public abstract class HttpBaseHandlerTest<T extends TaskManager> {
     protected final URI URI_SUBTASK = URI.create("http://localhost:8080/subtasks");
     protected final URI URI_SUBTASK_BY_ID = URI.create("http://localhost:8080/subtasks/2");
     protected final URI URI_HISTORY = URI.create("http://localhost:8080/history");
+    protected final URI URI_PRIORITY = URI.create("http://localhost:8080/prioritized");
 
 
     // перезапишем метод setUp
