@@ -42,6 +42,7 @@ public abstract class HttpBaseHandlerTest<T extends TaskManager> {
     protected final URI URI_EPIC_BY_ID = URI.create("http://localhost:8080/epics/1");
     protected final URI URI_SUBTASK = URI.create("http://localhost:8080/subtasks");
     protected final URI URI_SUBTASK_BY_ID = URI.create("http://localhost:8080/subtasks/2");
+    protected final URI URI_HISTORY = URI.create("http://localhost:8080/history");
 
 
     // перезапишем метод setUp
