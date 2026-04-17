@@ -1,14 +1,17 @@
 package httpservers.handlers;
 
 import com.google.gson.JsonSyntaxException;
+import com.google.gson.reflect.TypeToken;
 import com.sun.net.httpserver.HttpExchange;
 import exceptions.IntersectionsException;
 import exceptions.JsonErrorConverterException;
 import manager.TaskManager;
 import status.Status;
 import tasks.Epic;
+import tasks.Subtask;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.List;
 
 public class EpicHandler extends BaseHandler {
@@ -16,6 +19,7 @@ public class EpicHandler extends BaseHandler {
     private static final int PATH_WITH_ID = 3;
     private static final int ID_IN_PATH = 2;
     private static final int PATH_WITHOUT_ID = 2;
+    private static final int PATH_WITH_SUBTASK = 4;
 
     public EpicHandler(TaskManager manager) {
         super(manager);
@@ -38,12 +42,32 @@ public class EpicHandler extends BaseHandler {
                 getAllEpics(exchange);
                 return;
             }
+            if (elements.length == PATH_WITH_SUBTASK) {
+                if (isNumber(elements[ID_IN_PATH]) && elements[PATH_WITH_SUBTASK - 1].equals("subtasks")) {
+                    int id = Integer.parseInt(elements[ID_IN_PATH]);
+                    getAllSubtasks(exchange, id);
+                    return;
+                }
+                sendResponse(exchange, BAD_REQUEST, BAD_REQUEST_MESSAGE);
+                return;
+            }
 
             sendResponse(exchange, NOT_FOUND, NOT_FOUND_MESSAGE);
         } catch (IOException e) {
             System.out.println(ANSWER_SERVER_EXCEPTION + e.getMessage());
             sendErrorResponse(exchange, INTERNAL_SERVER_ERROR, e.getMessage());
         }
+    }
+
+    private void getAllSubtasks(HttpExchange exchange, int id) throws IOException {
+        Epic epic = manager.getEpic(id);
+        if (epic == null) {
+            sendResponse(exchange, NOT_FOUND, NOT_FOUND_MESSAGE);
+            return;
+        }
+        List<Subtask> subtasks = manager.getSubtasksListInEpic(epic);
+        Type typeListSubtask = TypeToken.getParameterized(List.class, Subtask.class).getType();
+        sendResponse(exchange, OK, jsonMapper.toJson(subtasks, typeListSubtask));
     }
 
     private void getAllEpics(HttpExchange exchange) throws IOException {
@@ -76,16 +100,16 @@ public class EpicHandler extends BaseHandler {
         } catch (IOException e) {
             sendErrorResponse(exchange, INTERNAL_SERVER_ERROR, e.getMessage());
         } catch (IntersectionsException e) {
-          sendErrorResponse(exchange, CONFLICT, e.getMessage());
+            sendErrorResponse(exchange, CONFLICT, e.getMessage());
         } catch (JsonErrorConverterException e) {
-           sendErrorResponse(exchange, BAD_REQUEST, e.getMessage());
+            sendErrorResponse(exchange, BAD_REQUEST, e.getMessage());
         }
     }
 
     private void createOrUpdate(HttpExchange exchange) throws IOException, JsonErrorConverterException, IntersectionsException {
         try {
             byte[] body = exchange.getRequestBody().readAllBytes();
-            if(body.length == 0){
+            if (body.length == 0) {
                 throw new JsonErrorConverterException(EMPTY_REQUEST_BODY);
             }
             String bodyString = new String(body);
@@ -136,15 +160,15 @@ public class EpicHandler extends BaseHandler {
 
     @Override
     void processDelete(String path, HttpExchange exchange) {
-        try{
+        try {
             String[] elements = path.split("/");
 
-            if(elements.length == PATH_WITHOUT_ID) {
+            if (elements.length == PATH_WITHOUT_ID) {
                 sendResponse(exchange, METHOD_NOT_ALLOWED, "Не поддерживается удаление через /epics");
                 return;
             }
             if (elements.length == PATH_WITH_ID) {
-                if(isNumber(elements[ID_IN_PATH])) {
+                if (isNumber(elements[ID_IN_PATH])) {
                     int id = Integer.parseInt(elements[ID_IN_PATH]);
                     deleteOneEpic(exchange, id);
                     return;
@@ -153,7 +177,7 @@ public class EpicHandler extends BaseHandler {
                 return;
             }
             sendResponse(exchange, NOT_FOUND, NOT_FOUND_MESSAGE);
-        }catch (IOException e){
+        } catch (IOException e) {
             System.out.println(ANSWER_SERVER_EXCEPTION + e.getMessage());
             sendErrorResponse(exchange, INTERNAL_SERVER_ERROR, e.getMessage());
         }
